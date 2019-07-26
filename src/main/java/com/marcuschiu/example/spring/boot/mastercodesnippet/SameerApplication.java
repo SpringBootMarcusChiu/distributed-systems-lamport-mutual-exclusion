@@ -1,7 +1,6 @@
 package com.marcuschiu.example.spring.boot.mastercodesnippet;
 
-import com.marcuschiu.example.spring.boot.mastercodesnippet.configuration.Configuration;
-import org.springframework.beans.factory.annotation.Value;
+import com.marcuschiu.example.spring.boot.mastercodesnippet.configuration.Config;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -16,7 +15,7 @@ import java.util.Collections;
 /**
  * Created by marcus.chiu on 10/1/16.
  * @SpringBootApplication - a convenience annotation that adds all the following:
- *     1. @Configuration - tags the class as a source of bean definitions
+ *     1. @Config - tags the class as a source of bean definitions
  *     2. @EnableAutoConfiguration - tells Spring Boot to markerMessageReceived adding beans
  *          based on classpath settings, other beans, and various property settings
  *     3. @EnableWebMvc - normally added for a Spring MVC app, but Spring boot adds
@@ -28,35 +27,31 @@ import java.util.Collections;
  */
 @EnableAsync
 @SpringBootApplication
-public class MasterCodeSnippetApplication implements CommandLineRunner {
+public class SameerApplication implements CommandLineRunner {
 
 	public static void main(String[] args) throws FileNotFoundException {
-		File file = new File("config/");
-		file = file.listFiles()[0];
-		Configuration configuration = new Configuration(file);
+		File file = new File("config/").listFiles()[0];
+		Config config = new Config(file);
 
+		// listen on port based on command-line argument (node.id)
 		for(String arg : args) {
 			if (arg.contains("node.id")) {
 				int nodeID = Integer.parseInt(arg.split("=")[1]);
 
-				SpringApplication app = new SpringApplication(MasterCodeSnippetApplication.class);
+				SpringApplication app = new SpringApplication(SameerApplication.class);
 				app.setAddCommandLineProperties(true);
-				app.setDefaultProperties(Collections
-						.singletonMap("server.port", configuration.getConfigurationNodeInfos().get(nodeID).getPort()));
+				app.setDefaultProperties(Collections.singletonMap("server.port",
+						config.getConfigNodeInfos().get(nodeID).getPort()));
 				app.run(args);
 				break;
 			}
 		}
 	}
 
-    @Value("${node.id}")
-	Integer nodeID;
-
     @Bean
-    public Configuration configuration() throws FileNotFoundException {
-		File file = new File("config/");
-		file = file.listFiles()[0];
-        return new Configuration(file);
+    public Config config() throws FileNotFoundException {
+		File file = new File("config/").listFiles()[0];
+        return new Config(file);
     }
 
     @Bean
@@ -66,5 +61,6 @@ public class MasterCodeSnippetApplication implements CommandLineRunner {
 
 	@Override
 	public void run(String... strings) throws Exception {
+
 	}
 }

@@ -1,14 +1,6 @@
-# six global parameters (see above)
-5 6 10 100 2000 15
+4 20 10 1000
 
-0 localhost 8080 # nodeID hostName listenPort
-1 localhost 8081
-2 localhost 8082
-3 localhost 8083
-4 localhost 8084
-
-1 4     # space delimited list of neighbors for graphNetworkNode 0
-0 2 3   # space delimited list of neighbors for graphNetworkNode 1
-1 3     # space delimited list of neighbors for graphNetworkNode 2
-1 2 4   # space delimited list of neighbors for graphNetworkNode 3
-0 3     # space delimited list of neighbors for graphNetworkNode 4
+0 localhost 1234
+1 localhost 1233
+2 localhost 5233
+3 localhost 1232

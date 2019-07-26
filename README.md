@@ -1,5 +1,5 @@
 ## Configuration Files
-- /config directory is where the applicatyion would read the configuration.txt file
+- /config directory is where the applicatyion would read the config.txt file
 - /output directory is where the application would output the snapshots to
 
 ## Installing and Starting Server
