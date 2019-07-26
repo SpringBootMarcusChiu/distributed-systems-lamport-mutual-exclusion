@@ -1,6 +1,8 @@
 package com.marcuschiu.example.spring.boot.mastercodesnippet;
 
 import com.marcuschiu.example.spring.boot.mastercodesnippet.configuration.Config;
+import com.marcuschiu.example.spring.boot.mastercodesnippet.service.LamportService;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -48,19 +50,32 @@ public class SameerApplication implements CommandLineRunner {
 		}
 	}
 
+	// create Config object and put into pool
     @Bean
     public Config config() throws FileNotFoundException {
 		File file = new File("config/").listFiles()[0];
         return new Config(file);
     }
 
+    // create RestTemplate object and put into pool
     @Bean
     public RestTemplate restTemplate() {
         return new RestTemplate();
     }
 
+    @Autowired
+	Config config;
+
+	@Autowired
+	LamportService lamportService;
+
 	@Override
 	public void run(String... strings) throws Exception {
-
+		for (int i = 0; i < config.getNumRequests(); i++) {
+			lamportService.cs_enter();
+			Thread.sleep(config.getCsExecutionTime());
+            lamportService.cs_leave();
+            Thread.sleep(config.getInterRequestDelay());
+		}
 	}
 }
