@@ -1,9 +1,6 @@
 package com.marcuschiu.example.spring.boot.mastercodesnippet;
 
 import com.marcuschiu.example.spring.boot.mastercodesnippet.configuration.Configuration;
-import com.marcuschiu.example.spring.boot.mastercodesnippet.service.MapProtocolService;
-import com.marcuschiu.example.spring.boot.mastercodesnippet.service.PerpetualSnapshotTakingService;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
@@ -55,12 +52,6 @@ public class MasterCodeSnippetApplication implements CommandLineRunner {
     @Value("${node.id}")
 	Integer nodeID;
 
-    @Autowired
-	MapProtocolService mapProtocolService;
-
-    @Autowired
-	PerpetualSnapshotTakingService perpetualSnapshotTakingService;
-
     @Bean
     public Configuration configuration() throws FileNotFoundException {
 		File file = new File("config/");
@@ -75,14 +66,5 @@ public class MasterCodeSnippetApplication implements CommandLineRunner {
 
 	@Override
 	public void run(String... strings) throws Exception {
-		if (nodeID == 0) {
-			System.out.println("\n\nTHIS NODE IS ZERO");
-			System.out.println("press any key to start");
-			System.in.read();
-
-			mapProtocolService.startMAPProtocol();
-			perpetualSnapshotTakingService.runPerpetualSnapshotTaking();
-		}
-		// every other node waits for node zero
 	}
 }
