@@ -12,6 +12,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
 import java.util.PriorityQueue;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.ReentrantLock;
 
@@ -34,6 +35,9 @@ public class EventService {
     private volatile AtomicInteger numRepliesReceived = new AtomicInteger(0);
     private volatile PriorityQueue<RequestMessage> requestQueue = new PriorityQueue<>(10, new RequestComparator());
 
+    private volatile AtomicBoolean csProposeEnter = new AtomicBoolean(false);
+    private volatile AtomicBoolean csAllowEnter = new AtomicBoolean(false);
+
     @Async
     public void process(RequestMessage message) {
         reLock.lock();
@@ -41,6 +45,7 @@ public class EventService {
             updateAndGetLTS(message.getTimestamp());
             requestQueue.add(message);
             sendReply(message.getFromID());
+            checkAndUpdate();
         } finally {
             reLock.unlock();
         }
@@ -59,6 +64,7 @@ public class EventService {
         try {
             updateAndGetLTS(message.getTimestamp());
             numRepliesReceived.incrementAndGet();
+            checkAndUpdate();
         } finally {
             reLock.unlock();
         }
@@ -70,6 +76,7 @@ public class EventService {
         try {
             updateAndGetLTS(message.getTimestamp());
             requestQueue.poll();
+            checkAndUpdate();
         } finally {
             reLock.unlock();
         }
@@ -78,6 +85,10 @@ public class EventService {
     public void cs_enter() {
         reLock.lock();
         try {
+            numRepliesReceived.set(0);
+            csAllowEnter.set(false);
+            csProposeEnter.set(true);
+
             // update LTS once
             RequestMessage message = new RequestMessage(updateAndGetLTS(null), nodeID);
 
@@ -97,18 +108,21 @@ public class EventService {
             reLock.unlock();
         }
 
-        while (numRepliesReceived.get() != (config.getNumNodes() - 1) &&
-                !requestQueue.peek().getFromID().equals(nodeID)) {
+        while (!csAllowEnter.get()) {
             // do nothing
+//            System.out.println("request next id: " + requestQueue.peek().getFromID());
         }
 
-        numRepliesReceived.set(0);
         // application can now enter critical-section
     }
 
     public void cs_leave() {
         reLock.lock();
         try {
+            numRepliesReceived.set(0);
+            csAllowEnter.set(false);
+            csProposeEnter.set(false);
+
             // update LTS once
             ReleaseMessage message = new ReleaseMessage(updateAndGetLTS(null), nodeID);
 
@@ -129,7 +143,18 @@ public class EventService {
         }
     }
 
-    synchronized Integer updateAndGetLTS(Integer pigLTS) {
+    // should be called within locked body
+    private void checkAndUpdate() {
+        if (csProposeEnter.get()) {
+            if (numRepliesReceived.get() == (config.getNumNodes() - 1)
+                    && requestQueue.peek().getFromID().equals(nodeID)) {
+                csProposeEnter.set(false);
+                csAllowEnter.set(true);
+            }
+        }
+    }
+
+    private Integer updateAndGetLTS(Integer pigLTS) {
         if (pigLTS != null) {
             lamportTimestamp.set(Math.max(pigLTS, lamportTimestamp.get()) + 1);
         } else {

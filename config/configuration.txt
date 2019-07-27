@@ -1,4 +1,4 @@
-2 20 10 10
+2 0 0 10
 
 0 localhost 8080
 1 localhost 8081
