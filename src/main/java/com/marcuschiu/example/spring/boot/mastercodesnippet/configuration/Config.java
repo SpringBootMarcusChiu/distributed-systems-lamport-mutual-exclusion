@@ -29,7 +29,7 @@ public class Config {
         numRequests = Integer.parseInt(numbers[3]);
 
         configNodeInfos = new ArrayList<>();
-        for(int i = 1; i <= numNodes; i++) {
+        for (int i = 1; i <= numNodes; i++) {
             String[] nodeInfo = lines.get(i).split(" ");
 
             ConfigNodeInfo configNodeInfo = new ConfigNodeInfo(
@@ -43,6 +43,7 @@ public class Config {
 
     /**
      * remove empty lines and comments
+     *
      * @param file
      * @return ArrayList<String> list of valid lines
      * @throws FileNotFoundException
