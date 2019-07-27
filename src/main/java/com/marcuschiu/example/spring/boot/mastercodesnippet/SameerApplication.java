@@ -101,11 +101,11 @@ public class SameerApplication implements CommandLineRunner {
     public void start() throws Exception {
         for (int i = 0; i < config.getNumRequests(); i++) {
             eventService.cs_enter();
-            System.out.println("CRITICAL SECTION - entered - ID:" + nodeID.toString() + " system-time: " + System.nanoTime());
+            System.out.println("CRITICAL SECTION - entered - ID:" + nodeID.toString() + " system-time: " + System.currentTimeMillis());
 
             Thread.sleep(random(config.getCsExecutionTime()));
 
-            System.out.println("CRITICAL SECTION - leaving - ID:" + nodeID.toString() + " system-time: " + System.nanoTime());
+            System.out.println("CRITICAL SECTION - leaving - ID:" + nodeID.toString() + " system-time: " + System.currentTimeMillis());
             eventService.cs_leave();
 
             Thread.sleep(random(config.getInterRequestDelay()));
