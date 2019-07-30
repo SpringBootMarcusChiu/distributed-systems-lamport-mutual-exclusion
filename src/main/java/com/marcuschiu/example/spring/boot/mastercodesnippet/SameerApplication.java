@@ -15,43 +15,31 @@ import org.springframework.web.client.RestTemplate;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.util.Collections;
+import java.lang.Math;
+import java.util.Random;
 
-/**
- * Created by marcus.chiu on 10/1/16.
- *
- * @SpringBootApplication - a convenience annotation that adds all the following:
- * 1. @Config - tags the class as a source of bean definitions
- * 2. @EnableAutoConfiguration - tells Spring Boot to markerMessageReceived adding beans
- * based on classpath settings, other beans, and various property settings
- * 3. @EnableWebMvc - normally added for a Spring MVC app, but Spring boot adds
- * it automatically when it sees 'spring-webmvc' on the classpath.
- * This flags application as a web application and activates key behaviors
- * like setting up DispatcherServlet
- * 4. @ComponentScan - tells Spring to look for other components, configurations,
- * and services in the package this class belongs to, allowing it to find the controllers
- */
 @EnableAsync
 @SpringBootApplication
 public class SameerApplication implements CommandLineRunner {
 
-	public static void main(String[] args) throws FileNotFoundException {
-		File file = new File("config/").listFiles()[0];
-		Config config = new Config(file);
+    public static void main(String[] args) throws FileNotFoundException {
+        File file = new File("config/").listFiles()[0];
+        Config config = new Config(file);
 
-		// listen on port based on command-line argument (node.id)
-		for(String arg : args) {
-			if (arg.contains("node.id")) {
-				int nodeID = Integer.parseInt(arg.split("=")[1]);
+        // listen on port based on command-line argument (node.id)
+        for (String arg : args) {
+            if (arg.contains("node.id")) {
+                int nodeID = Integer.parseInt(arg.split("=")[1]);
 
-				SpringApplication app = new SpringApplication(SameerApplication.class);
-				app.setAddCommandLineProperties(true);
-				app.setDefaultProperties(Collections.singletonMap("server.port",
-						config.getConfigNodeInfos().get(nodeID).getPort()));
-				app.run(args);
-				break;
-			}
-		}
-	}
+                SpringApplication app = new SpringApplication(SameerApplication.class);
+                app.setAddCommandLineProperties(true);
+                app.setDefaultProperties(Collections.singletonMap("server.port",
+                        config.getConfigNodeInfos().get(nodeID).getPort()));
+                app.run(args);
+                break;
+            }
+        }
+    }
 
     @Bean
     public Config config() throws FileNotFoundException {
@@ -75,6 +63,8 @@ public class SameerApplication implements CommandLineRunner {
 
     @Autowired
     RestTemplate restTemplate;
+
+    Random rand = new Random();
 
     @Override
     public void run(String... strings) throws Exception {
@@ -102,18 +92,28 @@ public class SameerApplication implements CommandLineRunner {
         for (int i = 0; i < config.getNumRequests(); i++) {
             eventService.cs_enter();
             System.out.println("CRITICAL SECTION - entered - ID:" + nodeID.toString() + " system-time: " + System.currentTimeMillis());
+            // TODO write to cs-enter time to file
 
-            Thread.sleep(random(config.getCsExecutionTime()));
+
+            Thread.sleep(exponentialRNG(rand, config.getCsExecutionTime())); // re-factored random()
 
             System.out.println("CRITICAL SECTION - leaving - ID:" + nodeID.toString() + " system-time: " + System.currentTimeMillis());
+            // TODO write to cs-enter time to file
+
+
             eventService.cs_leave();
 
-            Thread.sleep(random(config.getInterRequestDelay()));
+            Thread.sleep(exponentialRNG(rand, config.getInterRequestDelay())); // re-factored random()
         }
     }
 
-    private Integer random(Integer dORc) {
-        // TODO - expontential something? iono
-        return dORc;
+    private long exponentialRNG(Random uniformRNG, double distributionMean) {
+        // Applied inversion method described https://stackoverflow.com/questions/2106503/pseudorandom-number-generator-exponential-distribution
+        double uniformRandomNumber = uniformRNG.nextDouble();
+        double lambda = 1 / distributionMean; // distribution mean is defined by 1/lambda, where lambda is the rate parameter: https://en.wikipedia.org/wiki/Exponential_distribution#Mean,_variance,_moments_and_median
+        double exponentialRandomNumber = Math.log(1 - uniformRandomNumber) / (-lambda); // inversion method
+        //System.out.println(exponentialRandomNumber);
+        return (long) exponentialRandomNumber;
+        //return dORc;
     }
 }
