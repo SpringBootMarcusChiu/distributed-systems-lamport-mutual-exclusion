@@ -7,3 +7,5 @@
 - to run project
   - ./mvnw clean package
   - ./mvnw spring-boot:run -Drun.arguments=--node.id=0
+- to run verification
+  - ./mvnw spring-boot:run -Drun.arguments=--verify

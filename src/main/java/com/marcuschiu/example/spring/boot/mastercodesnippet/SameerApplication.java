@@ -3,6 +3,7 @@ package com.marcuschiu.example.spring.boot.mastercodesnippet;
 import com.marcuschiu.example.spring.boot.mastercodesnippet.configuration.Config;
 import com.marcuschiu.example.spring.boot.mastercodesnippet.service.EventService;
 import com.marcuschiu.example.spring.boot.mastercodesnippet.service.FileService;
+import com.marcuschiu.example.spring.boot.mastercodesnippet.service.VerifyService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.CommandLineRunner;
@@ -23,12 +24,12 @@ import java.util.Random;
 @SpringBootApplication
 public class SameerApplication implements CommandLineRunner {
 
-    public static void main(String[] args) throws FileNotFoundException {
+    public static void main(String[] args) throws Exception {
         File file = new File("config/").listFiles()[0];
         Config config = new Config(file);
 
-        // listen on port based on command-line argument (node.id)
         for (String arg : args) {
+            // listen on port based on command-line argument (node.id)
             if (arg.contains("node.id")) {
                 int nodeID = Integer.parseInt(arg.split("=")[1]);
 
@@ -38,6 +39,10 @@ public class SameerApplication implements CommandLineRunner {
                         config.getConfigNodeInfos().get(nodeID).getPort()));
                 app.run(args);
                 break;
+            }
+            // verify output files are mutual exclusion
+            if (arg.contains("verify")) {
+                System.out.println("OUTPUT: " + VerifyService.verify("output/"));
             }
         }
     }
