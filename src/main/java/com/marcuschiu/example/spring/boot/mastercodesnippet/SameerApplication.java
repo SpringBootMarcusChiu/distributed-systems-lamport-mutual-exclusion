@@ -2,6 +2,7 @@ package com.marcuschiu.example.spring.boot.mastercodesnippet;
 
 import com.marcuschiu.example.spring.boot.mastercodesnippet.configuration.Config;
 import com.marcuschiu.example.spring.boot.mastercodesnippet.service.EventService;
+import com.marcuschiu.example.spring.boot.mastercodesnippet.service.FileService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.CommandLineRunner;
@@ -58,6 +59,9 @@ public class SameerApplication implements CommandLineRunner {
     @Autowired
     EventService eventService;
 
+    @Autowired
+    FileService fileService;
+
     @Value("${node.id}")
     Integer nodeID;
 
@@ -91,19 +95,18 @@ public class SameerApplication implements CommandLineRunner {
     public void start() throws Exception {
         for (int i = 0; i < config.getNumRequests(); i++) {
             eventService.cs_enter();
-            System.out.println("CRITICAL SECTION - entered - ID:" + nodeID.toString() + " system-time: " + System.currentTimeMillis());
-            // TODO write to cs-enter time to file
+            String enterTime = getSystemTime(0);
+            System.out.println("CRITICAL SECTION - entered - NODE ID:" + nodeID.toString() + " TIME: " + enterTime);
 
+            Thread.sleep(exponentialRNG(rand, config.getCsExecutionTime()));
 
-            Thread.sleep(exponentialRNG(rand, config.getCsExecutionTime())); // re-factored random()
+            String exitTime = getSystemTime(0);
+            System.out.println("CRITICAL SECTION - leaving - NODE ID:" + nodeID.toString() + " TIME: " + exitTime);
 
-            System.out.println("CRITICAL SECTION - leaving - ID:" + nodeID.toString() + " system-time: " + System.currentTimeMillis());
-            // TODO write to cs-enter time to file
-
-
+            fileService.writeLine(enterTime + " " + exitTime);
             eventService.cs_leave();
 
-            Thread.sleep(exponentialRNG(rand, config.getInterRequestDelay())); // re-factored random()
+            Thread.sleep(exponentialRNG(rand, config.getInterRequestDelay()));
         }
     }
 
@@ -115,5 +118,11 @@ public class SameerApplication implements CommandLineRunner {
         //System.out.println(exponentialRandomNumber);
         return (long) exponentialRandomNumber;
         //return dORc;
+    }
+
+    private String getSystemTime(Integer nodeID) {
+        return restTemplate.getForObject(
+                config.getConfigNodeInfos().get(nodeID).getNodeURL() + "/message/system-time",
+                String.class);
     }
 }

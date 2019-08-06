@@ -46,4 +46,10 @@ public class AppMessageController {
         sameerApplication.start();
         return "started";
     }
+
+    @GetMapping("/system-time")
+    public @ResponseBody
+    String systemTime() {
+        return ((Long) System.currentTimeMillis()).toString();
+    }
 }
