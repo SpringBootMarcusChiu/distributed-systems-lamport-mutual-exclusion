@@ -23,7 +23,8 @@ public class FileService {
 
     @PostConstruct
     public void postConstruct() {
-        cleanOutputDirectory(outputPath);
+        cleanOutputDirectory(outputPath + "cs-times/");
+        cleanOutputDirectory(outputPath + "response-times/");
         outputCSTimesFileName = outputPath + "cs-times/node-" + nodeID.toString() + ".txt";
         outputResponseTimesFileName = outputPath + "response-times/node-" + nodeID.toString() + ".txt";
     }

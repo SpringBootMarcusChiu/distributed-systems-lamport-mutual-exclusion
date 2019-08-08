@@ -47,8 +47,11 @@ public class SameerApplication implements CommandLineRunner {
                 System.out.println("OUTPUT: " + VerifyService.verify("output/cs-times"));
             }
             if (arg.contains("statistic")) {
-                System.out.println("RESPONSE TIME AVERAGE (seconds): " + VerifyService.getResponseTimeAverageInSeconds("output/response-times"));
-                System.out.println("THROUGHPUT (num cs / seconds): " + VerifyService.getThroughput_NumCSsOverSeconds("output/cs-times"));
+                Double responseTime = VerifyService.getResponseTimeAverageInSeconds("output/response-times");
+                Double throughput = VerifyService.getThroughput_NumCSsOverSeconds("output/cs-times");
+                System.out.println("RESPONSE TIME AVERAGE (seconds): " + responseTime);
+                System.out.println("THROUGHPUT (num cs / seconds): " + throughput);
+                System.out.println(responseTime + "," + throughput);
             }
         }
     }

@@ -70,9 +70,7 @@ public class VerifyService {
         for (File file : files) {
             if (!file.getName().equals(".gitkeep")) {
                 try (Stream<String> stream = Files.lines(Paths.get(file.getCanonicalPath()))) {
-                    stream.forEach((String line) -> {
-                        responseTimes.add(new Double(line));
-                    });
+                    stream.forEach((String line) -> responseTimes.add(new Double(line)));
                 }
             }
         }
