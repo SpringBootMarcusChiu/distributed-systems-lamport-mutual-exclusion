@@ -1,8 +1,10 @@
 package com.marcuschiu.example.spring.boot.mastercodesnippet.service;
 
 import java.io.File;
+import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.Map;
 import java.util.SortedMap;
 import java.util.TreeMap;
@@ -37,10 +39,49 @@ public class VerifyService {
         return true;
     }
 
-    public static void main(String args[]) {
-        String one = "1234567891";
-        String two = "1234567890";
-        int t = one.compareTo(two);
-        System.out.println(t);
+    public static Double getThroughput_NumCSsOverSeconds(String outputDirectoryPath) throws IOException {
+        SortedMap<String, String> map = new TreeMap<>();
+
+        File directory = new File(outputDirectoryPath);
+        File[] files = directory.listFiles();
+        for (File file : files) {
+            if (!file.getName().equals(".gitkeep")) {
+                try (Stream<String> stream = Files.lines(Paths.get(file.getCanonicalPath()))) {
+                    stream.forEach((String line) -> {
+                        String[] numbers = line.split(" ");
+                        map.put(numbers[0], numbers[1]);
+                    });
+                }
+            }
+        }
+
+        Integer size = map.size();
+        Object[] array = map.entrySet().toArray();
+        Double startTime = new Double((String)((Map.Entry)array[0]).getKey());
+        Double endTime = new Double((String)((Map.Entry)array[size - 1]).getValue());
+        return (size / (endTime - startTime)) * 1000d;
+    }
+
+    public static Double getResponseTimeAverageInSeconds(String outputDirectoryPath) throws Exception {
+        ArrayList<Double> responseTimes = new ArrayList<>();
+
+        File directory = new File(outputDirectoryPath);
+        File[] files = directory.listFiles();
+        for (File file : files) {
+            if (!file.getName().equals(".gitkeep")) {
+                try (Stream<String> stream = Files.lines(Paths.get(file.getCanonicalPath()))) {
+                    stream.forEach((String line) -> {
+                        responseTimes.add(new Double(line));
+                    });
+                }
+            }
+        }
+
+        Double sum = 0d;
+        for (Double rt : responseTimes) {
+            sum += rt;
+        }
+
+        return (sum / responseTimes.size()) / 1000d;
     }
 }

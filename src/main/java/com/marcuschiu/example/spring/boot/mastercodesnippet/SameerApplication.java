@@ -16,8 +16,10 @@ import org.springframework.web.client.RestTemplate;
 
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.lang.Math;
+import java.util.List;
 import java.util.Random;
 
 @EnableAsync
@@ -42,7 +44,11 @@ public class SameerApplication implements CommandLineRunner {
             }
             // verify output files are mutual exclusion
             if (arg.contains("verify")) {
-                System.out.println("OUTPUT: " + VerifyService.verify("output/"));
+                System.out.println("OUTPUT: " + VerifyService.verify("output/cs-times"));
+            }
+            if (arg.contains("statistic")) {
+                System.out.println("RESPONSE TIME AVERAGE (seconds): " + VerifyService.getResponseTimeAverageInSeconds("output/response-times"));
+                System.out.println("THROUGHPUT (num cs / seconds): " + VerifyService.getThroughput_NumCSsOverSeconds("output/cs-times"));
             }
         }
     }
@@ -98,21 +104,44 @@ public class SameerApplication implements CommandLineRunner {
 
     @Async
     public void start() throws Exception {
+
+        ArrayList<Double> responseTimes = new ArrayList<>();
+        String requestTime;
+        String enterTime;
+        String exitTime;
+
+        // system time
         for (int i = 0; i < config.getNumRequests(); i++) {
+            requestTime = getSystemTime(0);
+            System.out.println("CRITICAL SECTION - request - NODE ID:" + nodeID.toString() + " TIME: " + requestTime);
+
             eventService.cs_enter();
-            String enterTime = getSystemTime(0);
+            enterTime = getSystemTime(0);
             System.out.println("CRITICAL SECTION - entered - NODE ID:" + nodeID.toString() + " TIME: " + enterTime);
 
             Thread.sleep(exponentialRNG(rand, config.getCsExecutionTime()));
 
-            String exitTime = getSystemTime(0);
+            exitTime = getSystemTime(0);
             System.out.println("CRITICAL SECTION - leaving - NODE ID:" + nodeID.toString() + " TIME: " + exitTime);
 
-            fileService.writeLine(enterTime + " " + exitTime);
+            responseTimes.add(new Double(enterTime) - new Double(requestTime));
+
+            fileService.writeCSTimeLine(enterTime + " " + exitTime);
             eventService.cs_leave();
 
             Thread.sleep(exponentialRNG(rand, config.getInterRequestDelay()));
         }
+
+        fileService.writeResponseTimeAverage(average(responseTimes));
+    }
+
+    private Double average(List<Double> numbers) {
+        Double sum = 0d;
+        for (Double d: numbers) {
+            sum += d;
+        }
+
+        return sum / numbers.size();
     }
 
     private long exponentialRNG(Random uniformRNG, double distributionMean) {

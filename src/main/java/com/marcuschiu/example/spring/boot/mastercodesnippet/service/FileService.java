@@ -18,12 +18,14 @@ public class FileService {
     @Value("${application.output.path}")
     String outputPath;
 
-    String outputFileName;
+    String outputCSTimesFileName;
+    String outputResponseTimesFileName;
 
     @PostConstruct
     public void postConstruct() {
         cleanOutputDirectory(outputPath);
-        outputFileName = outputPath + "node-" + nodeID.toString() + ".txt";
+        outputCSTimesFileName = outputPath + "cs-times/node-" + nodeID.toString() + ".txt";
+        outputResponseTimesFileName = outputPath + "response-times/node-" + nodeID.toString() + ".txt";
     }
 
     private void cleanOutputDirectory(String outputDirectoryPath) {
@@ -36,9 +38,15 @@ public class FileService {
         }
     }
 
-    public void writeLine(String line) throws IOException {
-        try (BufferedWriter writer = new BufferedWriter(new FileWriter(outputFileName, true))) {
+    public void writeCSTimeLine(String line) throws IOException {
+        try (BufferedWriter writer = new BufferedWriter(new FileWriter(outputCSTimesFileName, true))) {
             writer.write(line + "\n");
+        }
+    }
+
+    public void writeResponseTimeAverage(Double responseTimeAvg) throws IOException {
+        try (BufferedWriter writer = new BufferedWriter(new FileWriter(outputResponseTimesFileName, true))) {
+            writer.write(responseTimeAvg.toString());
         }
     }
 }
